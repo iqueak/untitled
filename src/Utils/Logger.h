@@ -9,6 +9,7 @@
 #endif //UNTITLED_LOGGER_H
 
 namespace Logger {
+
     void Init();
 
     void Log(const std::string& header,const std::string& message);

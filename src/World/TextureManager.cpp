@@ -19,6 +19,7 @@ namespace TextureManager {
         return TextureAtlas;
     }
 
+    /*** Generate texture coords for BlockType from indexes a texture from texture atlas ***/
     void TextureMap::getTextureCoords(int index, Vector2 (&coords)[4]) const {
         //  Почему то текстуры имеют совсем другие координаты
         //  2---------1          0 x----> 1

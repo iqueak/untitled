@@ -110,7 +110,6 @@ namespace Chunk {
         }
 
         UploadMesh(&mesh, false);
-
         return mesh;
     }
 }

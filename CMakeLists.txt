@@ -6,6 +6,7 @@ project(untitled)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Dependencies
+# Raylib
 set(RAYLIB_VERSION 4.2.0)
 find_package(raylib ${RAYLIB_VERSION} QUIET) # QUIET or REQUIRED
 if (NOT raylib_FOUND) # If there's none, fetch and build raylib
@@ -23,8 +24,11 @@ if (NOT raylib_FOUND) # If there's none, fetch and build raylib
     endif()
 endif()
 
+#anl
+include_directories(vendor/anl vendor/anl/include)
+
 # Our Project
 
 add_executable(${PROJECT_NAME} src/main.cpp src/World/ChunkManager.h src/World/ChunkManager.cpp src/World/Block.cpp src/World/Block.h src/World/TextureManager.cpp src/World/TextureManager.h src/Utils/Logger.h src/PlayerController.cpp src/PlayerController.h src/KeyboardController.h src/CameraController.cpp src/World/CameraController.h src/Utils/Logger.cpp)
-#set(raylib_VERBOSE 1)
+
 target_link_libraries(${PROJECT_NAME} raylib)

@@ -4,6 +4,13 @@
 #include "World/ChunkManager.h"
 #include "World/Block.h"
 
+#define ANL_IMPLEMENTATION
+ #include "anl.h"
+
+
+// TODO покдлючить АНЛ
+
+
 
 
 
@@ -29,9 +36,21 @@ int main(void) {
 
     InitWindow(screenWidth, screenHeight, "raylib [models] example - mesh generation");
 
+
+    anl::CKernel kernel;
+    anl::CNoiseExecutor vm(kernel);
+
+    auto b=kernel.gradientBasis(kernel.constant(3), kernel.seed(1546));
+
+    auto i=vm.evaluateScalar(0.1,0.1,b);
+    std::cout << i << std::endl;
+
+
     // INIT
+    Logger::Init();
     TextureManager::Init();
     Block::Init();
+
 
 
 
@@ -105,6 +124,7 @@ int main(void) {
 
     CloseWindow();          // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
+
 
     return 0;
 }
