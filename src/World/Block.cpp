@@ -11,7 +11,8 @@ namespace Block{
 
     /*** registered block types with block data (texture coords for face etc.)  ***/
     // TODO попробовать все таки использовать привычный std::map вместо обычного массива
-    static BlockType BlockTypes[int(BlockIDs::_COUNT)];
+    // TODO убрать статик
+    static BlockType  BlockTypes[int(BlockIDs::_COUNT)];
 
     //std::vector<BlockType> BlockTypes  = std::vector<BlockType>();
 

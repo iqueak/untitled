@@ -7,7 +7,7 @@
 
 using namespace std;
 
-namespace Chunk {
+namespace ChunkManager {
 
     static const Vector3 cubeVertices[8] = {
             {0.0f, 0.0f, 0.0f},

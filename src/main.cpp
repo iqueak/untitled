@@ -1,18 +1,13 @@
 #include <iostream>
 #include "raylib.h"
 #include "string"
-#include "World/ChunkManager.h"
-#include "World/Block.h"
+#include "Window.h"
+#include "World/World.h"
 
+
+// TODO подключение ANL
 #define ANL_IMPLEMENTATION
  #include "anl.h"
-
-
-// TODO покдлючить АНЛ
-
-
-
-
 
 using namespace std;
 
@@ -31,30 +26,15 @@ int main(void) {
 
     // Initialization
     //--------------------------------------------------------------------------------------
-    const int screenWidth = 1280;
-    const int screenHeight = 768;
 
-    InitWindow(screenWidth, screenHeight, "raylib [models] example - mesh generation");
+    Window::Init();
 
-
-    anl::CKernel kernel;
-    anl::CNoiseExecutor vm(kernel);
-
-    auto b=kernel.gradientBasis(kernel.constant(3), kernel.seed(1546));
-
-    auto i=vm.evaluateScalar(0.1,0.1,b);
-    std::cout << i << std::endl;
-
+    World::Init();
 
     // INIT
     Logger::Init();
     TextureManager::Init();
     Block::Init();
-
-
-
-
-
 
     // We generate a checked image for texturing
     //Image checked = GenImageChecked(2, 2, 1, 1, RED, GREEN);
@@ -62,7 +42,7 @@ int main(void) {
     //UnloadImage(checked);
 
     Model model;
-    Mesh mesh = Chunk::getCubeMesh();
+    Mesh mesh = ChunkManager::getCubeMesh();
     model = LoadModelFromMesh(mesh);
 
     Texture2D tex = TextureManager::GetAtlas()->texture2D;
