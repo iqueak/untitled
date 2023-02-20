@@ -4,46 +4,16 @@
 #include "raylib.h"
 #include <iostream>
 #include "Block.h"
+#include "map"
+#include "ChunkManager.h"
 
 using namespace std;
 
-namespace Chunk {
+using namespace Block;
 
-    static const Vector3 cubeVertices[8] = {
-            {0.0f, 0.0f, 0.0f},
-            {0.0f, 1.0f, 0.0f},
-            {1.0f, 1.0f, 0.0f},
-            {1.0f, 0.0f, 0.0f},
-            {0.0f, 0.0f, 1.0f},
-            {0.0f, 1.0f, 1.0f},
-            {1.0f, 1.0f, 1.0f},
-            {1.0f, 0.0f, 1.0f}
-    };
-// Векторы сторон для каждой грани куба, или нормали
-    static const Vector3 sideVectorForFace[6] = {
-            {0.0f,  0.0f,  -1.0f},
-            {1.0f,  0.0f,  0.0f},
-            {0.0f,  0.0f,  1.0f},
-            {-1.0f, 0.0f,  0.0f},
-            {0.0f,  -1.0f, 0.0f},
-            {0.0f,  1.0f,  0.0f}
-    };
-// список вершин для грани
-    static const int verticesForFace[6][4] = {
-            {0, 1, 2, 3}, // front
-            {3, 2, 6, 7}, // right
-            {7, 6, 5, 4}, // back
-            {4, 5, 1, 0}, // left
-            {4, 0, 3, 7}, // bottom
-            {1, 5, 6, 2} // top
-    };
-// текстуры
-    static const Vector2 texCoord[4][2] = {
-            {0.0f, 0.0f},
-            {0.0f, 1.0f},
-            {1.0f, 1.0f},
-            {1.0f, 0.0f}
-    };
+namespace ChunkManager {
+
+    static std::map<int, Chunk> activeChunks;
 
     bool checkneighbor(int x, int y, int f) {
 
@@ -111,5 +81,19 @@ namespace Chunk {
 
         UploadMesh(&mesh, false);
         return mesh;
+    }
+
+    void Init() {
+        activeChunks = std::map<int,ChunkManager::Chunk>();
+    }
+
+    Chunk & CreateChunk(int x, int z) {
+        int id = z + ActiveChunksCount * x;
+        activeChunks[id] = Chunk{x,z};
+        return activeChunks[id];
+    }
+
+    void UnloadChunk(int x, int z) {
+
     }
 }

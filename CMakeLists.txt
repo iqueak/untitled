@@ -29,6 +29,6 @@ include_directories(vendor/anl vendor/anl/include)
 
 # Our Project
 
-add_executable(${PROJECT_NAME} src/main.cpp src/World/ChunkManager.h src/World/ChunkManager.cpp src/World/Block.cpp src/World/Block.h src/World/TextureManager.cpp src/World/TextureManager.h src/Utils/Logger.h src/PlayerController.cpp src/PlayerController.h src/KeyboardController.h src/CameraController.cpp src/World/CameraController.h src/Utils/Logger.cpp)
+add_executable(${PROJECT_NAME} src/main.cpp src/World/ChunkManager.h src/World/ChunkManager.cpp src/World/Block.cpp src/World/Block.h src/World/TextureManager.cpp src/World/TextureManager.h src/Utils/Logger.h src/PlayerController.cpp src/PlayerController.h src/KeyboardController.h src/CameraController.cpp src/World/CameraController.h src/Utils/Logger.cpp src/Window.cpp src/Window.h src/World/WorldGenerator.h src/World/WorldGenerator.cpp src/World/World.cpp src/World/World.h)
 
 target_link_libraries(${PROJECT_NAME} raylib)
