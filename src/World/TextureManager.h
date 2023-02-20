@@ -1,7 +1,7 @@
 //
 // Created by bohdan.yurov on 13.02.2023.
 //
-
+#pragma once
 #ifndef UNTITLED_TEXTUREMANAGER_H
 #define UNTITLED_TEXTUREMANAGER_H
 

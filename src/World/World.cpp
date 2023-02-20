@@ -4,21 +4,23 @@
 
 #include "World.h"
 #include "map"
+#include "../Utils/Logger.h"
+#include "string"
+#include "ChunkManager.h"
+#include "WorldGenerator.h"
+
+using namespace ChunkManager;
 
 namespace World {
 
-    //static ChunkManager::Chunk activeChunks[ActiveChunksResolution * ActiveChunksResolution];
-    static std::map<int, ChunkManager::Chunk> activeChunks;
-
-
-    static Block::BlockType  BlockTypess[int(Block::BlockIDs::_COUNT)];
-
     void World::Init() {
 
-        activeChunks = std::map<int,ChunkManager::Chunk>();
-        activeChunks[0] = Chunk{1,3};
-
         WorldGenerationMode = WorldGenerationTypes::FLAT_MODE; // TODO first mode for test
+
+        Chunk & chunk = CreateChunk(0,0);
+        generateChunkData(chunk);
+
     }
+
 
 }

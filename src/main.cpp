@@ -29,12 +29,14 @@ int main(void) {
 
     Window::Init();
 
-    World::Init();
+
 
     // INIT
     Logger::Init();
     TextureManager::Init();
     Block::Init();
+
+    World::Init();
 
     // We generate a checked image for texturing
     //Image checked = GenImageChecked(2, 2, 1, 1, RED, GREEN);

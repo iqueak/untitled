@@ -12,7 +12,7 @@ namespace Window {
 
     void Window::Init(){
         InitWindow(screenWidth, screenHeight, "raylib [models] example - mesh generation");
-        ToggleFullscreen();
+        //ToggleFullscreen();
     }
 
 }

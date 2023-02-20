@@ -1,7 +1,7 @@
 //
 // Created by bohdan.yurov on 19.02.2023.
 //
-
+#pragma once
 #ifndef UNTITLED_WORLD_H
 #define UNTITLED_WORLD_H
 
@@ -13,8 +13,6 @@ using namespace ChunkManager;
 
 namespace World {
 
-    const int ActiveChunksResolution = 16;
-
     enum class WorldGenerationTypes {
         FLAT_MODE,
         STANDART_MODE,
@@ -22,7 +20,7 @@ namespace World {
         _COUNT
     };
 
-    WorldGenerationTypes WorldGenerationMode;
+    static WorldGenerationTypes WorldGenerationMode;
 
     void Init();
 }

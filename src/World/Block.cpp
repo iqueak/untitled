@@ -4,6 +4,7 @@
 
 #include "Block.h"
 #include "../Utils/Logger.h"
+#include "map"
 
 using namespace std;
 
@@ -12,7 +13,8 @@ namespace Block{
     /*** registered block types with block data (texture coords for face etc.)  ***/
     // TODO попробовать все таки использовать привычный std::map вместо обычного массива
     // TODO убрать статик
-    static BlockType  BlockTypes[int(BlockIDs::_COUNT)];
+    //static BlockType  BlockTypes[int(BlockIDs::_COUNT)];
+    std::map<int, BlockType> BlockTypes;
 
     //std::vector<BlockType> BlockTypes  = std::vector<BlockType>();
 
@@ -42,6 +44,12 @@ namespace Block{
         BlockType KEK = BlockType{"Dirt",false};
         int txind[6] = {3,3,3,3,2,0}; //TODO возможно стоит использовать std::vector
         Block::blockRegistry(BlockIDs::DIRT,KEK,txind);
+
+        BlockType bd = BlockType{"Bedrock",false};
+        Block::blockRegistry(BlockIDs::BEDROCK,bd,17);
+
+        BlockType st = BlockType{"Stone",false};
+        Block::blockRegistry(BlockIDs::STONE,st,1);
     }
 
 }
