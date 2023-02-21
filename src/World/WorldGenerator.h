@@ -9,7 +9,7 @@
 
 #include "ChunkManager.h"
 
-namespace World {
+namespace WorldManager {
 
     void generateChunkData(ChunkManager::Chunk & chunk);
 

@@ -2,7 +2,7 @@
 #include "raylib.h"
 #include "string"
 #include "Window.h"
-#include "World/World.h"
+#include "World/WorldManager.h"
 
 
 // TODO подключение ANL
@@ -32,27 +32,20 @@ int main(void) {
 
 
     // INIT
-    Logger::Init();
     TextureManager::Init();
     Block::Init();
 
-    World::Init();
+    WorldManager::Init();
 
     // We generate a checked image for texturing
     //Image checked = GenImageChecked(2, 2, 1, 1, RED, GREEN);
     //Texture2D texture = LoadTextureFromImage(checked);
     //UnloadImage(checked);
 
-    Model model;
-    Mesh mesh = ChunkManager::getCubeMesh();
-    model = LoadModelFromMesh(mesh);
-
-    Texture2D tex = TextureManager::GetAtlas()->texture2D;
-    // Set checked texture as default diffuse component for all models material
-    model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = tex;
+    // Set checked texture as default diffuse component for all models materia
 
     // Define the camera to look into our 3d world
-    Camera camera = {{5.0f, 5.0f, 5.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, 45.0f, 0};
+    Camera camera = {{30.0f, 0.0f, 30.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, 45.0f, 0};
 
     // Model drawing position
     Vector3 position = {0.0f, 0.0f, 0.0f};
@@ -77,7 +70,8 @@ int main(void) {
 
         BeginMode3D(camera);
 
-        DrawModel(model, position, 1.0f, WHITE);
+        DrawModel(WorldManager::getWorldModel(), position, 1.0f, WHITE);
+
         DrawGrid(10, 1.0);
 
         EndMode3D();
@@ -85,24 +79,13 @@ int main(void) {
         //DrawRectangle(30, 400, 310, 30, Fade(SKYBLUE, 0.5f));
         //DrawRectangleLines(30, 400, 310, 30, Fade(DARKBLUE, 0.5f));
 
-        std::string s = "MESH VERTICES COUNT: " + std::to_string(mesh.vertexCount);
-        char const *pchar = s.c_str();
-        DrawText(pchar, 0, 0, 24, BLACK);
-
-        DrawText(to_string(tex.width).c_str(), 0, 30, 24, BLACK);
+        //std::string s = "MESH VERTICES COUNT: " + std::to_string(mesh.vertexCount);
+        //char const *pchar = s.c_str();
+        //DrawText(pchar, 0, 0, 24, BLACK);
 
         EndDrawing();
         //----------------------------------------------------------------------------------
     }
-
-    // De-Initialization
-    //--------------------------------------------------------------------------------------
-    UnloadTexture(tex); // Unload texture
-
-    // Unload models data (GPU VRAM)
-    UnloadModel(model);
-
-
 
     CloseWindow();          // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

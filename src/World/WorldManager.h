@@ -11,7 +11,7 @@
 
 using namespace ChunkManager;
 
-namespace World {
+namespace WorldManager {
 
     enum class WorldGenerationTypes {
         FLAT_MODE,
@@ -20,7 +20,21 @@ namespace World {
         _COUNT
     };
 
-    static WorldGenerationTypes WorldGenerationMode;
+    class World {
+    public:
+        char * Name;
+        Model WorldModel;
+        int Seed;
+        WorldGenerationTypes WorldGenerationMode;
+        World(char * name, int seed);
+        //~World();
+    };
+
+    static World * _World;
 
     void Init();
+
+    void DrawWorld();
+
+    Model & getWorldModel();
 }
