@@ -6,18 +6,17 @@
 #include "fstream"
 #include "raylib.h"
 
+
+#include <chrono>
+using namespace std::chrono;
+
 using namespace std;
 
 namespace Logger {
 
-
     static const char *path = "Log.txt";
 
-    void Init() {
-        /*** to clear the exist text in log file ***/
-        fstream f(path,std::ofstream::out | std::ofstream::trunc);
-        f.close();
-    }
+
 
     /*** double log in console and in file ***/
     void Log(const std::string &header, const std::string &message) {
@@ -25,28 +24,19 @@ namespace Logger {
         LogToFile(header,message);
     }
 
-    void Logger::ConsoleLog(const std::string& header,const std::string& message) {
-        std::string log = "[" + header + "]: " + message + "!\n";
+    void Logger::ConsoleLog(string header, string message) {
+        string log = "[" + header + "]: " + message + "\n";
         printf("%s", log.c_str());
     }
 
+    void LogToFile(string header, string message) {
 
-    void LogToFile(const std::string &header, const std::string &message) {
-        /***
-         *
-         * open file each call of log to file can slowed perfomance
-         *
-         * TODO is too bad for prefomance: TEST1:128853 (with open in each call) | TEST2:2933 (without open in each call)
-         *
-         ***/
-        fstream f(path,std::ios_base::out | std::ios_base::app);
+        static ofstream file(path, ofstream::out | ofstream::trunc);
 
-        if (!f.is_open()) {
-            ConsoleLog("ERROR","Problem with opening log file.");
-            return;
-        }
-        std::string log = "[" + header + "]: " + message + "!\n";
-        f << log << "\n";
-        f.close();
+        std::time_t now = std::time(nullptr);
+        char timestamp[20];
+        std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", localtime(&now));
+
+        file << "[" << /*timestamp <<*/ "] " << "[" + header + "]: " + message << endl;
     }
 }

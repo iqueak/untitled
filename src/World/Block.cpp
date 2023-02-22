@@ -24,7 +24,7 @@ namespace Block{
             TextureManager::GetAtlas()->getTextureCoords(textureIndex, i);
         }
         BlockTypes[int(id)] = type;
-        Logger::Log("BLOCK",string(string("Block ") + type.name + string(": is registered!")));
+        //Logger::Log("BLOCK",string(string("Block ") + type.name + string(": is registered!")));
     }
 
     /*** register block type with multiple texture indexes ***/
@@ -33,7 +33,7 @@ namespace Block{
             TextureManager::GetAtlas()->getTextureCoords(textureIndexes[i], type.coordForFace[i]);
         }
         BlockTypes[int(id)] = type;
-        Logger::Log("BLOCK",string(string("Block ") + type.name + string(": is registered!")));
+        //Logger::Log("BLOCK",string(string("Block ") + type.name + string(": is registered!")));
     }
 
     BlockType & Block::getBlockData(BlockIDs id) {

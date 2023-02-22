@@ -50,15 +50,6 @@ namespace Block {
             {1, 5, 6, 2} // top
     };
 
-    /*
-    // Texture Coords
-    static const Vector2 texCoord[4][2] = {
-            {0.0f, 0.0f},
-            {0.0f, 1.0f},
-            {1.0f, 1.0f},
-            {1.0f, 0.0f}
-    };*/
-
     enum class BlockIDs {
         AIR = 0,
         BEDROCK,

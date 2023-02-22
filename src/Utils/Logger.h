@@ -8,14 +8,14 @@
 
 #endif //UNTITLED_LOGGER_H
 
+using namespace std;
+
 namespace Logger {
 
-    void Init();
+    void Log(string header, string message);
 
-    void Log(const std::string& header,const std::string& message);
-
-    void ConsoleLog(const std::string& header,const std::string& message);
-    void LogToFile(const std::string& header,const std::string& message);
+    void ConsoleLog(string header,string message);
+    void LogToFile(string header,string message);
 
 }
 
