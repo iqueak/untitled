@@ -45,7 +45,7 @@ int main(void) {
     // Set checked texture as default diffuse component for all models materia
 
     // Define the camera to look into our 3d world
-    Camera camera = {{30.0f, 14.0f, 30.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, 45.0f, 0};
+    Camera camera = {{1.0f, 19.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, 45.0f, 0};
 
     // Model drawing position
     Vector3 position = {0.0f, 0.0f, 0.0f};
@@ -70,7 +70,7 @@ int main(void) {
 
         BeginMode3D(camera);
 
-        DrawModel(WorldManager::getWorldModel(), position, 1.0f, WHITE);
+        DrawModel(WorldManager::getWorld().WorldModel, position, 1.0f, WHITE);
 
         DrawGrid(10, 1.0);
 

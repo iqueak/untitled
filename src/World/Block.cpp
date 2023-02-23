@@ -36,20 +36,23 @@ namespace Block{
         //Logger::Log("BLOCK",string(string("Block ") + type.name + string(": is registered!")));
     }
 
-    BlockType & Block::getBlockData(BlockIDs id) {
+    BlockType & Block::getBlockData(uint8_t id) {
         return BlockTypes[int(id)];
     }
 
     void Init() {
-        BlockType KEK = BlockType{"Dirt",false};
-        int txind[6] = {3,3,3,3,2,0}; //TODO возможно стоит использовать std::vector
-        Block::blockRegistry(BlockIDs::DIRT,KEK,txind);
+        BlockType dr = BlockType{"Dirt",false};
+        Block::blockRegistry(BlockIDs::DIRT,dr,2);
 
         BlockType bd = BlockType{"Bedrock",false};
         Block::blockRegistry(BlockIDs::BEDROCK,bd,17);
 
         BlockType st = BlockType{"Stone",false};
         Block::blockRegistry(BlockIDs::STONE,st,1);
+
+        BlockType KEK = BlockType{"Grass",false};
+        int txind[6] = {3,3,3,3,2,0}; //TODO возможно стоит использовать std::vector
+        Block::blockRegistry(BlockIDs::GRASS,KEK,txind);
     }
 
 }

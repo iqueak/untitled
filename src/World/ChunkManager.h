@@ -13,13 +13,24 @@
 
 namespace ChunkManager {
 
-    const int chunkSize = 16;
-    const int chunkMaxHeight = 256; // must be 512
+    const uint8_t chunkSize = 16;
+    const uint16_t chunkMaxHeight = 256; // must be 512
 
-    const int ActiveChunksResolution = 16;
-    const int ActiveChunksCount = ActiveChunksResolution * ActiveChunksResolution;
+    const uint8_t ActiveChunksResolution = 16;
+    const uint16_t ActiveChunksCount = ActiveChunksResolution * ActiveChunksResolution;
+    const uint8_t maxSectionsCount = chunkMaxHeight / chunkSize;
+
+    /*struct Section {
+        //uint8_t id;
+    };*/
 
     struct Chunk {
+        //Section sections[maxSectionsCount];
+        Mesh chunkMeshes[maxSectionsCount];
+
+        /***        Y               X           Z     ***/
+        uint8_t chunkData[chunkMaxHeight][chunkSize][chunkSize];
+
         int x;
         int z;
 
@@ -32,17 +43,17 @@ namespace ChunkManager {
         // надо изучить сколько это сможет сэкономить нагрузки на процессор, и сколько потребует памяти!
 
         // TODO: орагнизовать для всех таких моментов, в репозитории список проблем
-        
-        /***        Y               X           Z     ***/
-        Block::BlockIDs chunkData[chunkMaxHeight][chunkSize][chunkSize];
 
-        Mesh chunkMesh;
+        // TODO использовать подходящие типы данных экономящие память в итоге
+
+        // TODO применять одни и те же правила для наименований переменных и тд CamelCase?
 
         int getChunkId(){
             return z + ActiveChunksCount * x;
         }
-
     };
+
+    bool checkNeighbor(int x,int y); // must be a global coords translated to chunk coords and block coords in this chunk, if coord is out of blocks coords in buffer, must returned false
 
     void Init();
 

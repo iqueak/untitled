@@ -90,7 +90,7 @@ namespace Block {
     void blockRegistry(BlockIDs id, BlockType & type, int index);
     void blockRegistry(BlockIDs id, BlockType & type, int indexes[6]);
 
-    BlockType & getBlockData(BlockIDs id);
+    BlockType & getBlockData(uint8_t id);
 
     void Init();
 }

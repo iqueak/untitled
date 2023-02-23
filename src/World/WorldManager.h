@@ -4,7 +4,6 @@
 #pragma once
 #ifndef UNTITLED_WORLD_H
 #define UNTITLED_WORLD_H
-
 #endif //UNTITLED_WORLD_H
 
 #include "ChunkManager.h"
@@ -26,7 +25,7 @@ namespace WorldManager {
         Model WorldModel;
         int Seed;
         WorldGenerationTypes WorldGenerationMode;
-        World(char * name, int seed);
+        World(char * name, int seed, WorldGenerationTypes generationType);
         //~World();
     };
 
@@ -36,5 +35,5 @@ namespace WorldManager {
 
     void DrawWorld();
 
-    Model & getWorldModel();
+    World & getWorld();
 }
