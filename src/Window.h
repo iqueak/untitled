@@ -11,3 +11,4 @@ namespace Window {
 
     void Init();
 }
+

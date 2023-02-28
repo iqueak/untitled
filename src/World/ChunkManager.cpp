@@ -18,6 +18,7 @@ using namespace Block;
 
 namespace ChunkManager {
 
+    // TODO почемуто не отрисовует!!!
     static std::map<int, Chunk> activeChunks;
 
     int range(int v,int min,int max){
@@ -31,6 +32,7 @@ namespace ChunkManager {
         return !(v < max && v >= min);
     }
 
+    // must be a global coords translated to chunk coords and block coords in this chunk, if coord is out of blocks coords in buffer, must returned false
     /*** True сосед есть, рисовать ненужно! ***/
     bool checkNeighborBlocks(Chunk & chunk, int x, int y, int z, int8_t f) {
         // должно распространятся на соседние чанки
@@ -56,24 +58,52 @@ namespace ChunkManager {
     }
 
     void Init() {
-        activeChunks = std::map<int,ChunkManager::Chunk>();
+
     }
 
-    Chunk & CreateChunk(int x, int z) {
-        int id = z + ActiveChunksCount * x;
-        activeChunks[id] = Chunk{0,0};
-        WorldManager::generateChunkData(activeChunks[id]);
-        buildMesh(activeChunks[id]);
-        return activeChunks[id];
+    string GetChunksInfo(){
+        int vertices = 0;
+        int triangles = 0;
+        int chunksCount = 0;
+        int activeSections = 0;
+
+        for (const auto& chunks : activeChunks) {
+            for (int i = 0; i < maxSectionsCount; i++) {
+                if(chunks.second.chunkMeshes[i].vertexCount > 0) {
+                    vertices += chunks.second.chunkMeshes[i].vertexCount;
+                    triangles += chunks.second.chunkMeshes[i].triangleCount;
+                    activeSections++;
+                }
+            }
+            chunksCount++;
+        }
+
+        return "Vertices: " + to_string(vertices) + "\nTriangles: " + to_string(triangles) + "\nFaces: " + to_string(vertices/4) + "\nChunks: " + to_string(chunksCount) + "\nActive Sections: " + to_string(activeSections);
+    }
+
+    void DrawChunks() {
+        for (const auto& value : activeChunks) {
+            DrawModel(value.second.chunkModel, Vector3{float(value.second.x * chunkSize),0,float(value.second.z * chunkSize)}, 1.0f, WHITE);
+        }
+    }
+
+    Chunk & CreateChunk(int x_, int z_) {
+        int id = z_ + ActiveChunksCount * x_;
+        activeChunks[id] = Chunk{x_,z_};
+        Chunk & ch = activeChunks[id];
+
+        WorldManager::generateChunkData(ch);
+        buildMeshes(ch);
+
+        ch.generateModel();
+        return ch;
     }
 
     void UnloadChunk(int x, int z) {
 
     }
 
-    void buildMesh(Chunk &chunk) {
-
-        // TODO DEBUG ограничил одной секцией
+    void buildMeshes(Chunk &chunk) {
         for (uint8_t s = 0; s < maxSectionsCount; s++) {
 
             vector<float> vertices;
@@ -87,6 +117,8 @@ namespace ChunkManager {
             chunk.chunkMeshes[s] = Mesh{};
             Mesh & mesh = chunk.chunkMeshes[s];
 
+
+
             for (uint8_t y = 0; y < chunkSize; y++) {
                 for (uint8_t x = 0; x < chunkSize; x++) {
                     for (uint8_t z = 0; z < chunkSize; z++) {
@@ -96,7 +128,6 @@ namespace ChunkManager {
                         int Z = z;
 
                         uint8_t id = chunk.chunkData[Y][X][Z];
-
 
                         // TODO : а что если хранить только ячейки с заполненными блоками, воздух не хранить!
                         if (id == int(BlockIDs::AIR)) continue;
@@ -149,8 +180,36 @@ namespace ChunkManager {
             ***/
             mesh.indices = triangles.data();
 
+
+            //chunk.chunkModel.meshes[s] = chunk.chunkMeshes[s];
+            //chunk.chunkModel.meshMaterial[s] = 0;
+
             UploadMesh(&mesh,false);
 
+        }
+    }
+
+    void Chunk::generateModel() {
+        //TODO возможно это не лучший вариант, хранить в чанке модель, и делать одну модель на каждый чанк,
+        //TODO но покачто это будет так, а потом в итоге, рендер клиента будет отделен от сервера
+
+        // Crate Model
+        chunkModel = Model{0};
+        chunkModel.transform = { 1.0f, 0.0f, 0.0f, 0.0f,
+                                    0.0f, 1.0f, 0.0f, 0.0f,
+                                    0.0f, 0.0f, 1.0f, 0.0f,
+                                    0.0f, 0.0f, 0.0f, 1.0f };
+        chunkModel.meshCount = maxSectionsCount;
+        chunkModel.meshes = (Mesh *)RL_CALLOC(chunkModel.meshCount, sizeof(Mesh));
+        chunkModel.materialCount = 1;
+        chunkModel.materials = (Material *)RL_CALLOC(chunkModel.materialCount, sizeof(Material));
+        chunkModel.materials[0] = LoadMaterialDefault();
+        chunkModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = TextureManager::GetAtlas()->texture2D;
+        chunkModel.meshMaterial = (int *)RL_CALLOC(chunkModel.meshCount, sizeof(int));
+
+        for (int i = 0; i < ChunkManager::maxSectionsCount; i++) {
+            chunkModel.meshes[i] = chunkMeshes[i];
+            chunkModel.meshMaterial[i] = 0;
         }
     }
 }

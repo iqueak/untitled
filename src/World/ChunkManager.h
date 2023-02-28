@@ -25,14 +25,19 @@ namespace ChunkManager {
     };*/
 
     struct Chunk {
+    public:
         //Section sections[maxSectionsCount];
         Mesh chunkMeshes[maxSectionsCount];
+
+        Model chunkModel;
 
         /***        Y               X           Z     ***/
         uint8_t chunkData[chunkMaxHeight][chunkSize][chunkSize];
 
         int x;
         int z;
+
+        Vector3 position;
 
         //int chunkData[chunkSize * chunkSize * chunkMaxHeight]; TODO: найти лучший способ хранения чанк даты
         // TODO: хранить тип блока в виде unsigned short или еще меньше,т.к нужно не так много типов блоков, найти подходящий тип данных по обьему
@@ -48,19 +53,23 @@ namespace ChunkManager {
 
         // TODO применять одни и те же правила для наименований переменных и тд CamelCase?
 
+        void generateModel();
+
         int getChunkId(){
             return z + ActiveChunksCount * x;
         }
     };
 
-    bool checkNeighbor(int x,int y); // must be a global coords translated to chunk coords and block coords in this chunk, if coord is out of blocks coords in buffer, must returned false
-
     void Init();
 
-    void buildMesh(Chunk& chunk);
+    void DrawChunks();
+
+    void buildMeshes(Chunk& chunk);
 
     Chunk & CreateChunk(int x, int z);
 
     void UnloadChunk(int x, int z);
+
+    string GetChunksInfo();
 
 }

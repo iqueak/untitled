@@ -6,6 +6,7 @@
 #define UNTITLED_WORLD_H
 #endif //UNTITLED_WORLD_H
 
+#include <map>
 #include "ChunkManager.h"
 
 using namespace ChunkManager;
@@ -25,6 +26,7 @@ namespace WorldManager {
         Model WorldModel;
         int Seed;
         WorldGenerationTypes WorldGenerationMode;
+        Chunk * ch;
         World(char * name, int seed, WorldGenerationTypes generationType);
         //~World();
     };
@@ -32,8 +34,6 @@ namespace WorldManager {
     static World * _World;
 
     void Init();
-
-    void DrawWorld();
 
     World & getWorld();
 }
