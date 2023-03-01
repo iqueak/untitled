@@ -9,6 +9,7 @@
 #include "ChunkManager.h"
 #include "WorldGenerator.h"
 #include "vector"
+#include "../PlayerController.h"
 
 #include "config.h"
 
@@ -20,6 +21,7 @@ namespace ChunkManager {
 
     // TODO почемуто не отрисовует!!!
     static std::map<int, Chunk> activeChunks;
+    static std::map<int, Chunk> bufferChunks;
 
     int range(int v,int min,int max){
         if (v > max) return max;
@@ -42,12 +44,8 @@ namespace ChunkManager {
         y += Block::sideVectorForFace[f].y;
         z += Block::sideVectorForFace[f].z;
 
-        // TODO убрать это было для дебага
-        bool xOut = isOutOfRange(x,0,chunkSize);
-        bool yOut = isOutOfRange(y,0,chunkMaxHeight);
-        bool zOut = isOutOfRange(z,0,chunkSize);
-
-        if( xOut|| yOut || zOut) return false;
+        // TODO для теста отключил отрисовку по краям чанка иза выхода за границы
+        if( isOutOfRange(x,0,chunkSize) || isOutOfRange(y,0,chunkMaxHeight) || isOutOfRange(z,0,chunkSize)) return true;
 
         uint8_t id = chunk.chunkData[y][x][z];
 
@@ -88,6 +86,7 @@ namespace ChunkManager {
     }
 
     Chunk & CreateChunk(int x_, int z_) {
+        Logger::LogToFile("CREATE CHUNK:","(" + to_string(x_) + "," + to_string(z_));
         int id = z_ + ActiveChunksCount * x_;
         activeChunks[id] = Chunk{x_,z_};
         Chunk & ch = activeChunks[id];
@@ -100,7 +99,76 @@ namespace ChunkManager {
     }
 
     void UnloadChunk(int x, int z) {
+        int id = z + ActiveChunksCount * x;
 
+        /*for (int i = 0; i < maxSectionsCount; ++i) {
+            UnloadMesh(activeChunks[id].chunkMeshes[i]);
+        }*/
+        // Unload Model should also meshes unload
+        UnloadModel(activeChunks[id].chunkModel);
+
+        bufferChunks[id] = activeChunks[id];
+
+        activeChunks.erase(id);
+    }
+
+    void LoadChunk(int x, int z) {
+        int id = z + ActiveChunksCount * x;
+        activeChunks[id] = bufferChunks[id];
+
+        for (int i = 0; i < maxSectionsCount; i++) {
+            UploadMesh(&activeChunks[id].chunkMeshes[i],false);
+        }
+        activeChunks[id].generateModel();
+        bufferChunks.erase(id);
+    }
+
+    void UpdateChunk() {
+
+    }
+
+    void Update() {
+        // TODO возможно стоит использовать AABB или BoundingBox
+        Vector3 playerCoords = PlayerController::GetPlayerCoords();
+
+        int chunkX = int(playerCoords.x / chunkSize);
+        int chunkZ = int(playerCoords.z / chunkSize);
+
+        int chMinX = chunkX - (ActiveChunksResolution/2);
+        int chMinZ = chunkZ - (ActiveChunksResolution/2);
+
+        int chMaxX = chunkX + (ActiveChunksResolution/2);
+        int chMaxZ = chunkZ + (ActiveChunksResolution/2);
+
+
+        //Load and Create chunks
+        for (int x = chMinX; x <= chMaxX; x++) {
+            for (int z = chMinZ; z <= chMaxZ; z++) {
+                int id = z + ActiveChunksCount * x;
+                if(activeChunks.find(id) == activeChunks.end()) {
+                    //Logger::LogToFile("CHUNK DONT FOUND:","(" + to_string(x) + "," + to_string(z));
+                    CreateChunk(x,z);
+                    //if(bufferChunks.find(id) == bufferChunks.end()) {
+                        /*** Has'nt deactivated Chunk in buffer***/
+
+                    //} else {
+                        //LoadChunk(x,z);
+                    //}
+                }
+                else {
+                    //Logger::LogToFile("CHUNK BEEN FOUNDED:","(" + to_string(x) + "," + to_string(z));
+                    // Update Chunk
+                    UpdateChunk();
+                }
+            }
+        }
+
+        // Unload chunks
+        for (const auto& value : activeChunks) {
+            if (!(value.second.x >= chMinX && value.second.x <= chMaxX && value.second.z >= chMinZ && value.second.z <= chMaxZ)){
+                //UnloadChunk(value.second.x,value.second.z);
+            }
+        }
     }
 
     void buildMeshes(Chunk &chunk) {
@@ -142,9 +210,9 @@ namespace ChunkManager {
                             for (int8_t v = 0; v < 4; v++) {
 
                                 // vertices
-                                vertices.push_back(cubeVertices[verticesForFace[f][v]].x + X);
+                                vertices.push_back(cubeVertices[verticesForFace[f][v]].x + X + chunk.position.x * chunkSize);
                                 vertices.push_back(cubeVertices[verticesForFace[f][v]].y + Y);
-                                vertices.push_back(cubeVertices[verticesForFace[f][v]].z + Z);
+                                vertices.push_back(cubeVertices[verticesForFace[f][v]].z + Z + chunk.position.z * chunkSize);
 
                                 // normals
                                 normals.push_back(sideVectorForFace[f].x);
@@ -180,10 +248,6 @@ namespace ChunkManager {
             ***/
             mesh.indices = triangles.data();
 
-
-            //chunk.chunkModel.meshes[s] = chunk.chunkMeshes[s];
-            //chunk.chunkModel.meshMaterial[s] = 0;
-
             UploadMesh(&mesh,false);
 
         }
@@ -208,8 +272,13 @@ namespace ChunkManager {
         chunkModel.meshMaterial = (int *)RL_CALLOC(chunkModel.meshCount, sizeof(int));
 
         for (int i = 0; i < ChunkManager::maxSectionsCount; i++) {
+            // TODO дублируются ли тут меши или нет?????
             chunkModel.meshes[i] = chunkMeshes[i];
             chunkModel.meshMaterial[i] = 0;
         }
+    }
+
+    int Chunk::getChunkId() {
+        return z + ActiveChunksCount * x;
     }
 }

@@ -59,6 +59,8 @@ namespace PlayerController {
 
     static Player _Player;
 
+
+    Vector3 GetPlayerCoords();
     void Init();
     void Update();
     void BeginCamera3DMode();

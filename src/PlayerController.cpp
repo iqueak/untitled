@@ -98,4 +98,8 @@ namespace PlayerController {
         Movement();
         CameraAngle();
     }
+
+    Vector3 GetPlayerCoords() {
+        return _Player.position;
+    }
 }

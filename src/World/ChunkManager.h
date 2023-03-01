@@ -16,7 +16,7 @@ namespace ChunkManager {
     const uint8_t chunkSize = 16;
     const uint16_t chunkMaxHeight = 256; // must be 512
 
-    const uint8_t ActiveChunksResolution = 16;
+    const uint8_t ActiveChunksResolution = 4;
     const uint16_t ActiveChunksCount = ActiveChunksResolution * ActiveChunksResolution;
     const uint8_t maxSectionsCount = chunkMaxHeight / chunkSize;
 
@@ -26,6 +26,8 @@ namespace ChunkManager {
 
     struct Chunk {
     public:
+        int x;
+        int z;
         //Section sections[maxSectionsCount];
         Mesh chunkMeshes[maxSectionsCount];
 
@@ -33,9 +35,6 @@ namespace ChunkManager {
 
         /***        Y               X           Z     ***/
         uint8_t chunkData[chunkMaxHeight][chunkSize][chunkSize];
-
-        int x;
-        int z;
 
         Vector3 position;
 
@@ -55,9 +54,7 @@ namespace ChunkManager {
 
         void generateModel();
 
-        int getChunkId(){
-            return z + ActiveChunksCount * x;
-        }
+        int getChunkId();
     };
 
     void Init();
@@ -71,5 +68,7 @@ namespace ChunkManager {
     void UnloadChunk(int x, int z);
 
     string GetChunksInfo();
+
+    void Update();
 
 }

@@ -15,6 +15,7 @@ namespace WorldManager {
 
         CreateChunk(0,0);
         CreateChunk(1,0);
+        CreateChunk(0,1);
     }
 
     World & getWorld() {
