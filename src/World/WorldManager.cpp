@@ -13,9 +13,9 @@ namespace WorldManager {
     void WorldManager::Init() {
         _World = new World("MyWorld",123,WorldGenerationTypes::FLAT_MODE);
 
-        CreateChunk(0,0);
-        CreateChunk(1,0);
-        CreateChunk(0,1);
+        //CreateChunk(0,0);
+        //CreateChunk(1,0);
+        //CreateChunk(0,1);
     }
 
     World & getWorld() {

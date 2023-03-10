@@ -2,6 +2,7 @@
 // Created by bohdan.yurov on 16.02.2023.
 //
 #include <cmath>
+#include <thread>
 #include "PlayerController.h"
 #include "raylib.h"
 #include "Utils/Logger.h"

@@ -29,17 +29,17 @@ int main(void) {
 
     // Initialization
     //--------------------------------------------------------------------------------------
+    //SetConfigFlags(FLAG_VSYNC_HINT);
+    //SetConfigFlags(FLAG_MSAA_4X_HINT);
 
     Window::Init();
 
     TextureManager::Init();
+    ChunkManager::Init();
     Block::Init();
 
     WorldManager::Init();
     PlayerController::Init();
-
-
-
 
 
     // Model drawing position
@@ -57,7 +57,7 @@ int main(void) {
 
         //CameraController::Update();
         PlayerController::Update();
-        ChunkManager::Update();
+
 
 
         // Draw
@@ -67,8 +67,8 @@ int main(void) {
         ClearBackground(RAYWHITE);
         PlayerController::BeginCamera3DMode();
 
-
-        ChunkManager::DrawChunks();
+        ChunkManager::Update();
+        //ChunkManager::DrawChunks();
 
         DrawGrid(10, 1.0);
 
@@ -80,7 +80,7 @@ int main(void) {
         //std::string s = "MESH VERTICES COUNT: " + std::to_string(mesh.vertexCount);
         //char const *pchar = s.c_str();
 
-        string message = ChunkManager::GetChunksInfo() + "\nX: " + to_string(PlayerController::GetPlayerCoords().x) +
+        string message = "FPS:" + to_string(GetFPS()) + "\n" + ChunkManager::GetChunksInfo() + "\nX: " + to_string(PlayerController::GetPlayerCoords().x) +
                 "; Y: " + to_string(PlayerController::GetPlayerCoords().y) +
                 "; Z: " + to_string(PlayerController::GetPlayerCoords().z);
 

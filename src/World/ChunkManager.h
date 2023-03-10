@@ -14,29 +14,28 @@
 namespace ChunkManager {
 
     const uint8_t chunkSize = 16;
-    const uint16_t chunkMaxHeight = 256; // must be 512
+    const uint16_t chunkMaxHeight = 256; // must be 512?
 
-    const uint8_t ActiveChunksResolution = 4;
+    const uint8_t ActiveChunksResolution = 16;
     const uint16_t ActiveChunksCount = ActiveChunksResolution * ActiveChunksResolution;
     const uint8_t maxSectionsCount = chunkMaxHeight / chunkSize;
 
-    /*struct Section {
-        //uint8_t id;
-    };*/
+    static Material DefaultChunkMaterial;
+
+    struct Section {
+        uint8_t id;
+        bool isEmpty;
+    };
 
     struct Chunk {
     public:
-        int x;
-        int z;
-        //Section sections[maxSectionsCount];
+        int32_t x;
+        int32_t z;
+        Section sections[maxSectionsCount];
         Mesh chunkMeshes[maxSectionsCount];
 
-        Model chunkModel;
-
-        /***        Y               X           Z     ***/
+        /***                Y               X           Z     ***/
         uint8_t chunkData[chunkMaxHeight][chunkSize][chunkSize];
-
-        Vector3 position;
 
         //int chunkData[chunkSize * chunkSize * chunkMaxHeight]; TODO: найти лучший способ хранения чанк даты
         // TODO: хранить тип блока в виде unsigned short или еще меньше,т.к нужно не так много типов блоков, найти подходящий тип данных по обьему
@@ -51,10 +50,6 @@ namespace ChunkManager {
         // TODO использовать подходящие типы данных экономящие память в итоге
 
         // TODO применять одни и те же правила для наименований переменных и тд CamelCase?
-
-        void generateModel();
-
-        int getChunkId();
     };
 
     void Init();
@@ -70,5 +65,6 @@ namespace ChunkManager {
     string GetChunksInfo();
 
     void Update();
+
 
 }

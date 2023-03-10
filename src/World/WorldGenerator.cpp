@@ -14,15 +14,15 @@ namespace WorldManager {
         if (WorldManager::getWorld().WorldGenerationMode == WorldGenerationTypes::FLAT_MODE) {
 
             int setType = int(BlockIDs::AIR); // Type Air
-
+            int offset = rand() % (5 - 0 + 1) + 0;
             for (int y = 0; y < chunkMaxHeight; y++) {
                 for (int x = 0; x < chunkSize; x++) {
                     for (int z = 0; z < chunkSize; z++) {
                         if (y == 0)  setType = int(BlockIDs::BEDROCK);
                         if (y >= 1) setType = int(BlockIDs::STONE);
                         if (y >= 16) setType = int(BlockIDs::DIRT);
-                        if (y >= 18) setType = int(BlockIDs::GRASS);
-                        if (y >= 19) setType = int(BlockIDs::AIR);
+                        if (y >= 18 + offset) setType = int(BlockIDs::GRASS);
+                        if (y >= 19 + offset) setType = int(BlockIDs::AIR);
                         chunk.chunkData[y][x][z] = setType;
                     }
                 }

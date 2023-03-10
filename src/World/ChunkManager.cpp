@@ -4,12 +4,16 @@
 #include "raylib.h"
 #include <iostream>
 #include <rlgl.h>
+#include <thread>
 #include "Block.h"
+#include "unordered_map"
+#include "set"
 #include "map"
 #include "ChunkManager.h"
 #include "WorldGenerator.h"
 #include "vector"
 #include "../PlayerController.h"
+#include "mutex"
 
 #include "config.h"
 
@@ -18,14 +22,38 @@ using namespace std;
 using namespace Block;
 
 namespace ChunkManager {
+    static std::set<int64_t> activeChunks; // Хранит только айди чанков из буфера
 
-    // TODO почемуто не отрисовует!!!
-    static std::map<int, Chunk> activeChunks;
-    static std::map<int, Chunk> bufferChunks;
+    // TODO попробовать в качестве айди для чанков буфера long int без хешера, используя стандартрный хешер, предлагается обьединять два 32 битных инта в один 64 long int
+    static std::unordered_map<int64_t, Chunk> bufferChunks;
 
-    int range(int v,int min,int max){
+    // for information
+    static int verticesCount = 0;
+    static int trianglesCount = 0;
+    static int activeSections = 0;
+    static int activeChunksCount = 0;
+
+    uint64_t getID(int32_t x, int32_t z) {
+        // TODO на сколько в этом случае статик каст затратен для производительности? почти не влияет тк это указание компилятору
+        return static_cast<uint64_t>(x) << 32 | static_cast<uint32_t>(z);
+    }
+
+    Chunk &getChunk(int32_t x, int32_t z) {
+        uint64_t id = getID(x, z);
+        return bufferChunks[id];
+    }
+
+    Chunk &newChunk(int32_t x, int32_t z) {
+        uint64_t id = getID(x, z);
+        bufferChunks[id] = Chunk{x, z};
+        return bufferChunks[id];
+    }
+
+
+    int range(int v, int min, int max) {
         if (v > max) return max;
         if (v < min) return min;
+
         return v;
     }
 
@@ -36,7 +64,7 @@ namespace ChunkManager {
 
     // must be a global coords translated to chunk coords and block coords in this chunk, if coord is out of blocks coords in buffer, must returned false
     /*** True сосед есть, рисовать ненужно! ***/
-    bool checkNeighborBlocks(Chunk & chunk, int x, int y, int z, int8_t f) {
+    bool checkNeighborBlocks(Chunk &chunk, int x, int y, int z, int8_t f) {
         // должно распространятся на соседние чанки
         // пока что не выходим за грани чанка и используем для этого range
 
@@ -44,119 +72,124 @@ namespace ChunkManager {
         y += Block::sideVectorForFace[f].y;
         z += Block::sideVectorForFace[f].z;
 
-        // TODO для теста отключил отрисовку по краям чанка иза выхода за границы
-        if( isOutOfRange(x,0,chunkSize) || isOutOfRange(y,0,chunkMaxHeight) || isOutOfRange(z,0,chunkSize)) return true;
+        if (isOutOfRange(x, 0, chunkSize) || isOutOfRange(y, 0, chunkMaxHeight) || isOutOfRange(z, 0, chunkSize))
+            return false;
 
         uint8_t id = chunk.chunkData[y][x][z];
 
-        if(id == int(BlockIDs::AIR)) return false;
+        if (id == int(BlockIDs::AIR)) return false;
 
-        BlockType & data = getBlockData(id);
+        BlockType &data = getBlockData(id);
         return !data.isTransparent;
     }
 
     void Init() {
-
+        DefaultChunkMaterial = LoadMaterialDefault();
+        DefaultChunkMaterial.maps[MATERIAL_MAP_DIFFUSE].texture = TextureManager::GetAtlas()->texture2D;
     }
 
-    string GetChunksInfo(){
-        int vertices = 0;
-        int triangles = 0;
-        int chunksCount = 0;
-        int activeSections = 0;
+    string GetChunksInfo() {
+        return "Vertices: " + to_string(verticesCount) + "\nTriangles: " + to_string(trianglesCount) + "\nFaces: " +
+               to_string(verticesCount / 4) + "\nChunks: " + to_string(activeChunksCount) + "\nActive Sections: " +
+               to_string(activeSections);
+    }
 
-        for (const auto& chunks : activeChunks) {
-            for (int i = 0; i < maxSectionsCount; i++) {
-                if(chunks.second.chunkMeshes[i].vertexCount > 0) {
-                    vertices += chunks.second.chunkMeshes[i].vertexCount;
-                    triangles += chunks.second.chunkMeshes[i].triangleCount;
+    // TODO тест без использования модели только дравмеш с дефолт материалом
+
+
+    void DrawChunks() {
+        verticesCount = 0;
+        trianglesCount = 0;
+        activeSections = 0;
+        activeChunksCount = 0;
+        for (const auto &chunkId : activeChunks) { // TODO только для теста буфер н// ужно рисовать только активные
+            Chunk &chunk = bufferChunks[chunkId];
+            for (uint8_t s = 0; s < maxSectionsCount; s++) {
+                // TODO нормально оформить создание этой матрицы
+                Matrix modelTransform = MatrixIdentity(); // Создаем единичную матрицу трансформации модели
+                modelTransform = MatrixMultiply(modelTransform, MatrixTranslate(chunk.x * chunkSize, 0.0f, chunk.z *
+                                                                                                           chunkSize)); // Добавляем трансляцию модели
+                modelTransform = MatrixMultiply(modelTransform,
+                                                MatrixRotateXYZ(Vector3{0.0f, 0.0f, 0.0f})); // Добавляем поворот модели
+                modelTransform = MatrixMultiply(modelTransform,
+                                                MatrixScale(1.0f, 1.0f, 1.0f)); // Добавляем масштабирование модели
+                if (!chunk.sections[s].isEmpty) {
+                    DrawMesh(chunk.chunkMeshes[s], DefaultChunkMaterial, modelTransform);
+                    // for info
+                    verticesCount += chunk.chunkMeshes[s].vertexCount;
+                    trianglesCount += chunk.chunkMeshes[s].triangleCount;
                     activeSections++;
                 }
             }
-            chunksCount++;
-        }
-
-        return "Vertices: " + to_string(vertices) + "\nTriangles: " + to_string(triangles) + "\nFaces: " + to_string(vertices/4) + "\nChunks: " + to_string(chunksCount) + "\nActive Sections: " + to_string(activeSections);
-    }
-
-    void DrawChunks() {
-        for (const auto& value : activeChunks) {
-            DrawModel(value.second.chunkModel, Vector3{float(value.second.x * chunkSize),0,float(value.second.z * chunkSize)}, 1.0f, WHITE);
+            activeChunksCount++;
         }
     }
 
-    Chunk & CreateChunk(int x_, int z_) {
-        Logger::LogToFile("CREATE CHUNK:","(" + to_string(x_) + "," + to_string(z_));
-        int id = z_ + ActiveChunksCount * x_;
-        activeChunks[id] = Chunk{x_,z_};
-        Chunk & ch = activeChunks[id];
+    Chunk &CreateChunk(int32_t x_, int32_t z_) {
+        uint64_t id = getID(x_, z_);
+
+        Chunk &ch = newChunk(x_, z_);
+
+        // registry this chunk to active
+        activeChunks.insert(id);
+
 
         WorldManager::generateChunkData(ch);
         buildMeshes(ch);
 
-        ch.generateModel();
         return ch;
     }
 
-    void UnloadChunk(int x, int z) {
-        int id = z + ActiveChunksCount * x;
-
-        /*for (int i = 0; i < maxSectionsCount; ++i) {
-            UnloadMesh(activeChunks[id].chunkMeshes[i]);
-        }*/
-        // Unload Model should also meshes unload
-        UnloadModel(activeChunks[id].chunkModel);
-
-        bufferChunks[id] = activeChunks[id];
-
-        activeChunks.erase(id);
-    }
-
-    void LoadChunk(int x, int z) {
-        int id = z + ActiveChunksCount * x;
-        activeChunks[id] = bufferChunks[id];
-
-        for (int i = 0; i < maxSectionsCount; i++) {
-            UploadMesh(&activeChunks[id].chunkMeshes[i],false);
+    void LoadChunk(uint64_t id) {
+        Chunk &ch = bufferChunks[id];
+        for (int s = 0; s < maxSectionsCount; s++) {
+            if (!ch.sections[s].isEmpty) {
+                //UploadMesh(&ch.chunkMeshes[s], false);
+            }
         }
-        activeChunks[id].generateModel();
-        bufferChunks.erase(id);
+        activeChunks.insert(id);
     }
 
     void UpdateChunk() {
 
     }
 
-    void Update() {
+    void renderChunks() {
         // TODO возможно стоит использовать AABB или BoundingBox
         Vector3 playerCoords = PlayerController::GetPlayerCoords();
 
         int chunkX = int(playerCoords.x / chunkSize);
         int chunkZ = int(playerCoords.z / chunkSize);
 
-        int chMinX = chunkX - (ActiveChunksResolution/2);
-        int chMinZ = chunkZ - (ActiveChunksResolution/2);
+        int chMinX = chunkX - (ActiveChunksResolution / 2);
+        int chMinZ = chunkZ - (ActiveChunksResolution / 2);
 
-        int chMaxX = chunkX + (ActiveChunksResolution/2);
-        int chMaxZ = chunkZ + (ActiveChunksResolution/2);
+        int chMaxX = chunkX + (ActiveChunksResolution / 2);
+        int chMaxZ = chunkZ + (ActiveChunksResolution / 2);
 
+        verticesCount = 0;
+        trianglesCount = 0;
+        activeSections = 0;
+        activeChunksCount = 0;
 
         //Load and Create chunks
-        for (int x = chMinX; x <= chMaxX; x++) {
-            for (int z = chMinZ; z <= chMaxZ; z++) {
-                int id = z + ActiveChunksCount * x;
-                if(activeChunks.find(id) == activeChunks.end()) {
-                    //Logger::LogToFile("CHUNK DONT FOUND:","(" + to_string(x) + "," + to_string(z));
-                    CreateChunk(x,z);
-                    //if(bufferChunks.find(id) == bufferChunks.end()) {
-                        /*** Has'nt deactivated Chunk in buffer***/
+        /*** Проходит по области координат видимых чанков, и если такого чанка нет - создает его, а если есть делает
+         * обновление чанка (тик и тд) ***/
+        for (int32_t x = chMinX; x <= chMaxX; x++) {
+            for (int32_t z = chMinZ; z <= chMaxZ; z++) {
 
-                    //} else {
-                        //LoadChunk(x,z);
-                    //}
-                }
-                else {
-                    //Logger::LogToFile("CHUNK BEEN FOUNDED:","(" + to_string(x) + "," + to_string(z));
+                uint64_t id = getID(x, z);
+
+                if (activeChunks.find(id) == activeChunks.end()) {
+                    if (bufferChunks.find(id) == bufferChunks.end()) {
+                        /*** Has'nt deactivated Chunk in buffer***/
+                        CreateChunk(x, z);
+
+
+                    } else {
+                        LoadChunk(id);
+                    }
+                } else {
                     // Update Chunk
                     UpdateChunk();
                 }
@@ -164,16 +197,38 @@ namespace ChunkManager {
         }
 
         // Unload chunks
-        for (const auto& value : activeChunks) {
-            if (!(value.second.x >= chMinX && value.second.x <= chMaxX && value.second.z >= chMinZ && value.second.z <= chMaxZ)){
-                //UnloadChunk(value.second.x,value.second.z);
+        // TODO работает но со скрипом бля надо отдельный поток или норм алгоритм, посмотреть как сделано у других
+
+        /*** Проходит по всем чанкам с помощью итератора, и если чанк не входит в видимую область, удаляет его из активных,
+         * а если входит - отрисовывает его + обновляет общую информацию о вершинах, триугольниках и тд ***/
+        for (auto chunkId = activeChunks.begin(); chunkId != activeChunks.end();) {
+            Chunk &ch = bufferChunks[*chunkId];
+            if (!(ch.x >= chMinX && ch.x <= chMaxX &&
+                  ch.z >= chMinZ && ch.z <= chMaxZ)) {
+                chunkId = activeChunks.erase(chunkId);
+                //bufferChunks.erase(*chunkId); // TODO тут нужно удалять чанки из кеша и сохранять их в файл
+            } else {
+                for (uint8_t s = 0; s < maxSectionsCount; s++) {
+                    if (!ch.sections[s].isEmpty) {
+                        DrawMesh(ch.chunkMeshes[s], DefaultChunkMaterial, MatrixIdentity());
+                        // for info
+                        verticesCount += ch.chunkMeshes[s].vertexCount;
+                        trianglesCount += ch.chunkMeshes[s].triangleCount;
+                        activeSections++;
+                    }
+                }
+                activeChunksCount++;
+                ++chunkId; // переходим к следующему элементу
             }
         }
     }
 
+    void Update() {
+        renderChunks();
+    }
+
     void buildMeshes(Chunk &chunk) {
         for (uint8_t s = 0; s < maxSectionsCount; s++) {
-
             vector<float> vertices;
             vector<unsigned short> triangles;
             vector<float> texcoords;
@@ -183,9 +238,7 @@ namespace ChunkManager {
             uint16_t sectionOffset = s * chunkSize;
 
             chunk.chunkMeshes[s] = Mesh{};
-            Mesh & mesh = chunk.chunkMeshes[s];
-
-
+            Mesh &mesh = chunk.chunkMeshes[s];
 
             for (uint8_t y = 0; y < chunkSize; y++) {
                 for (uint8_t x = 0; x < chunkSize; x++) {
@@ -200,19 +253,21 @@ namespace ChunkManager {
                         // TODO : а что если хранить только ячейки с заполненными блоками, воздух не хранить!
                         if (id == int(BlockIDs::AIR)) continue;
 
-                        Block::BlockType& BlockData = getBlockData(id);
+                        Block::BlockType &BlockData = getBlockData(id);
 
                         for (int8_t f = 0; f < 6; f++) {
 
-                            bool neighbor = checkNeighborBlocks(chunk,X,Y,Z,f);
-                            if(neighbor) continue;
+                            bool neighbor = checkNeighborBlocks(chunk, X, Y, Z, f);
+                            if (neighbor) continue;
 
                             for (int8_t v = 0; v < 4; v++) {
 
                                 // vertices
-                                vertices.push_back(cubeVertices[verticesForFace[f][v]].x + X + chunk.position.x * chunkSize);
+                                vertices.push_back(
+                                        cubeVertices[verticesForFace[f][v]].x + X + chunk.x * chunkSize);
                                 vertices.push_back(cubeVertices[verticesForFace[f][v]].y + Y);
-                                vertices.push_back(cubeVertices[verticesForFace[f][v]].z + Z + chunk.position.z * chunkSize);
+                                vertices.push_back(
+                                        cubeVertices[verticesForFace[f][v]].z + Z + chunk.z * chunkSize);
 
                                 // normals
                                 normals.push_back(sideVectorForFace[f].x);
@@ -235,50 +290,21 @@ namespace ChunkManager {
                     }
                 }
             }
-            mesh.vertexCount = vertices.size() / 3;
-            mesh.triangleCount = triangles.size() / 3;
+            // TODO очень кривое определение пустой секции но пока что так, надо определять на моменте генерации, генерить чанк дату по секторно?
+            // TODO TEST  в будущем изменить создание секции
+            chunk.sections[s] = Section{s, true};
 
-            mesh.vertices = vertices.data();
-            mesh.texcoords = texcoords.data();
-            mesh.normals = normals.data();
+            if (vertices.size() > 0) {
+                mesh.vertexCount = vertices.size() / 3;
+                mesh.triangleCount = triangles.size() / 3;
+                mesh.vertices = vertices.data();
+                mesh.texcoords = texcoords.data();
+                mesh.normals = normals.data();
+                mesh.indices = triangles.data();
 
-
-            /*** из за того что максимальная вершина на которую может указать индекс, 65535, это 2730 блоков
-            *    нужно разделить чанк на секции, и хранить в секции меш, придумать какие значения брать для секции  и тд
-            ***/
-            mesh.indices = triangles.data();
-
-            UploadMesh(&mesh,false);
-
+                chunk.sections[s].isEmpty = false;
+                UploadMesh(&mesh, false);
+            }
         }
-    }
-
-    void Chunk::generateModel() {
-        //TODO возможно это не лучший вариант, хранить в чанке модель, и делать одну модель на каждый чанк,
-        //TODO но покачто это будет так, а потом в итоге, рендер клиента будет отделен от сервера
-
-        // Crate Model
-        chunkModel = Model{0};
-        chunkModel.transform = { 1.0f, 0.0f, 0.0f, 0.0f,
-                                    0.0f, 1.0f, 0.0f, 0.0f,
-                                    0.0f, 0.0f, 1.0f, 0.0f,
-                                    0.0f, 0.0f, 0.0f, 1.0f };
-        chunkModel.meshCount = maxSectionsCount;
-        chunkModel.meshes = (Mesh *)RL_CALLOC(chunkModel.meshCount, sizeof(Mesh));
-        chunkModel.materialCount = 1;
-        chunkModel.materials = (Material *)RL_CALLOC(chunkModel.materialCount, sizeof(Material));
-        chunkModel.materials[0] = LoadMaterialDefault();
-        chunkModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = TextureManager::GetAtlas()->texture2D;
-        chunkModel.meshMaterial = (int *)RL_CALLOC(chunkModel.meshCount, sizeof(int));
-
-        for (int i = 0; i < ChunkManager::maxSectionsCount; i++) {
-            // TODO дублируются ли тут меши или нет?????
-            chunkModel.meshes[i] = chunkMeshes[i];
-            chunkModel.meshMaterial[i] = 0;
-        }
-    }
-
-    int Chunk::getChunkId() {
-        return z + ActiveChunksCount * x;
     }
 }
